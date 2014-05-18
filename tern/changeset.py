@@ -100,7 +100,7 @@ class Changeset(object):
 
         """
         with open(filename, 'w') as fh:
-            fh.write('--- Order: {}\n'.format(self.order))
+            fh.write('--- Order: {0}\n'.format(self.order))
             fh.write('--- Begin setup\n')
             fh.write(self.setup)
             fh.write('\n')
