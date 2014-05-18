@@ -13,20 +13,21 @@ def test_changeset_from_file():
     fn = os.path.join(dir, 'data/changeset')
     changeset = Changeset.from_file(fn)
 
+    eq_(changeset.created_at, 123123)
     eq_(changeset.order, 12)
     eq_(changeset.setup.strip(), 'create table foo(id primary key);')
     eq_(changeset.teardown.strip(), 'drop table foo;')
 
 
 def test_changeset_hash():
-    changeset = Changeset(12, 'abc', 'cba')
+    changeset = Changeset(12, 'abc', 'cba', 123123)
     eq_(
         changeset.hash,
-        b'\xc8\x13B\x94#9\xfbE\xa6c>\x8bvy\xc1\x19\xfc\xa3\x84\xac',
+        b'N\xe6\x94\xde\xe3\x10%\x1c[\xfe\x02\x02\xd3\x14\xc7Q\xaez\xccZ',
     )
     eq_(
         changeset.hex_hash,
-        'c81342942339fb45a6633e8b7679c119fca384ac',
+        '4ee694dee310251c5bfe0202d314c751ae7acc5a',
     )
 
 
@@ -38,11 +39,12 @@ def save_teardown():
 @with_setup(lambda: None, save_teardown)
 def test_changeset_save():
     # Save a changeset
-    changeset = Changeset(24, 'foo', 'bar')
+    changeset = Changeset(24, 'foo', 'bar', 123321)
     changeset.save(changeset_save_fn)
 
     # Load it, and verify integrity.
     changeset.from_file(changeset_save_fn)
+    eq_(changeset.created_at, 123321)
     eq_(changeset.order, 24)
     eq_(changeset.setup, 'foo')
     eq_(changeset.teardown, 'bar')

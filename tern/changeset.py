@@ -14,11 +14,16 @@ class Changeset(object):
     :type setup: str
     :param teardown: The SQL to reverse the change.
     :type teardown: str
+    :param created_at:  The unix timestamp when the changeset was created.
+    :type created_at:  int
 
     """
 
     file_end_regex = re.compile(
         r'^-{2,}\s*end$', flags=re.IGNORECASE
+    )
+    file_created_at_regex = re.compile(
+        r'^-{2,}\s*created at\s*:\s*([0-9]+)$', flags=re.IGNORECASE
     )
     file_order_regex = re.compile(
         r'^-{2,}\s*order\s*:\s*([0-9]+)$', flags=re.IGNORECASE
@@ -30,10 +35,11 @@ class Changeset(object):
         r'^-{2,}\s*begin teardown$', flags=re.IGNORECASE
     )
 
-    def __init__(self, order, setup, teardown):
+    def __init__(self, order, setup, teardown, created_at):
         self.order = order
         self.setup = setup
         self.teardown = teardown
+        self.created_at = created_at
 
     @classmethod
     def from_file(cls, filename):
@@ -41,6 +47,7 @@ class Changeset(object):
         Parse a file and create a Changeset object from that.  The format of
         the file:
 
+        * Created at marked by ``--- Created at: XXXXXX``
         * Order marked by ``--- Order: XX``.
         * Setup SQL begun by ``--- Begin setup`` and ended with ``--- End``.
         * Teardown SQL begun by ``--- Begin teardown`` and ended with
@@ -48,6 +55,7 @@ class Changeset(object):
         * Any lines outside of these are ignored.
 
         """
+        created_at = None
         order = None
         setup = None
         teardown = None
@@ -70,17 +78,20 @@ class Changeset(object):
             for line in fh:
                 line = line.strip()
 
-                # Check for order
-                m = cls.file_order_regex.match(line)
-                if m is not None:
-                    order = int(m.group(1))
+                # Check for created at and order
+                created_re = cls.file_created_at_regex.match(line)
+                order_re = cls.file_order_regex.match(line)
+                if order_re is not None:
+                    order = int(order_re.group(1))
+                elif created_re is not None:
+                    created_at = int(created_re.group(1))
 
                 # Check for setup
-                if cls.file_begin_setup_regex.match(line) is not None:
+                elif cls.file_begin_setup_regex.match(line) is not None:
                     setup = read_block(fh)
 
                 # Check for teardown
-                if cls.file_begin_teardown_regex.match(line) is not None:
+                elif cls.file_begin_teardown_regex.match(line) is not None:
                     teardown = read_block(fh)
 
         if order is None:
@@ -89,8 +100,10 @@ class Changeset(object):
             raise ValueError('File did not define setup SQL.')
         if teardown is None:
             raise ValueError('File did not define teardown SQL.')
+        if created_at is None:
+            raise ValueError('File did not define created at.')
 
-        return cls(order, setup, teardown)
+        return cls(order, setup, teardown, created_at)
 
     def save(self, filename):
         """
@@ -101,6 +114,7 @@ class Changeset(object):
 
         """
         with open(filename, 'w') as fh:
+            fh.write('--- Created at: {0}\n'.format(self.created_at))
             fh.write('--- Order: {0}\n'.format(self.order))
             fh.write('--- Begin setup\n')
             fh.write(self.setup)
@@ -129,6 +143,8 @@ class Changeset(object):
 
     def _make_hash(self):
         h = hashlib.sha1()
+        h.update(str(self.created_at).encode('utf-8'))
+        h.update('-'.encode('utf-8'))
         h.update(str(self.order).encode('utf-8'))
         h.update(self.setup.encode('utf-8'))
         h.update(self.teardown.encode('utf-8'))
@@ -138,7 +154,7 @@ class Changeset(object):
     def hash(self):
         """
         Returns a hash as a binary string of the object, which is the SHA-1
-        hash of ``str(order) + setup + teardown``.
+        hash of ``str(created_at) + '-' + str(order) + setup + teardown``.
 
         """
         return self._make_hash().digest()
@@ -147,7 +163,7 @@ class Changeset(object):
     def hex_hash(self):
         """
         Returns a hexidecimal hash of the object, which is the SHA-1 hash of
-        ``str(order) + setup + teardown``.
+        ``str(created_at) + '-' + str(order) + setup + teardown``.
 
         """
         return self._make_hash().hexdigest()
