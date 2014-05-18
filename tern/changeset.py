@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 import re
 import hashlib
 
+from .exceptions import InvalidChangesetFile
+
 
 class Changeset(object):
     """
@@ -95,13 +97,13 @@ class Changeset(object):
                     teardown = read_block(fh)
 
         if order is None:
-            raise ValueError('File did not define order.')
+            raise InvalidChangesetFile('File did not define order.')
         if setup is None:
-            raise ValueError('File did not define setup SQL.')
+            raise InvalidChangesetFile('File did not define setup SQL.')
         if teardown is None:
-            raise ValueError('File did not define teardown SQL.')
+            raise InvalidChangesetFile('File did not define teardown SQL.')
         if created_at is None:
-            raise ValueError('File did not define created at.')
+            raise InvalidChangesetFile('File did not define created at.')
 
         return cls(order, setup, teardown, created_at)
 

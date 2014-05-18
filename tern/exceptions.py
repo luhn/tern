@@ -1,0 +1,2 @@
+class InvalidChangesetFile(Exception):
+    pass
