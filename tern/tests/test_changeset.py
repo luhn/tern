@@ -22,7 +22,7 @@ def test_changeset_hash():
     changeset = Changeset(12, 'abc', 'cba')
     eq_(
         changeset.hash,
-        '\xc8\x13B\x94#9\xfbE\xa6c>\x8bvy\xc1\x19\xfc\xa3\x84\xac',
+        b'\xc8\x13B\x94#9\xfbE\xa6c>\x8bvy\xc1\x19\xfc\xa3\x84\xac',
     )
     eq_(
         changeset.hex_hash,

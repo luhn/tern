@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import re
 import hashlib
 
@@ -128,9 +129,9 @@ class Changeset(object):
 
     def _make_hash(self):
         h = hashlib.sha1()
-        h.update(str(self.order))
-        h.update(self.setup)
-        h.update(self.teardown)
+        h.update(str(self.order).encode('utf-8'))
+        h.update(self.setup.encode('utf-8'))
+        h.update(self.teardown.encode('utf-8'))
         return h
 
     @property
