@@ -12,8 +12,14 @@ class AdapterBase(object):
         """
         pass
 
-    @abstractmethod
     def __enter__(self):
+        self.open()
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+    @abstractmethod
+    def open(self):
         """
         Do whatever needs to be done to open a connection.
 
@@ -21,7 +27,7 @@ class AdapterBase(object):
         pass
 
     @abstractmethod
-    def __exit__(self, type, value, traceback):
+    def close(self):
         """
         Do whatever needs to be done to close the connection.
 
@@ -55,7 +61,8 @@ class AdapterBase(object):
     @abstractmethod
     def apply(self, changeset):
         """
-        Apply the given changeset.
+        Apply the given changeset.  If the order is ``None``, an ordering
+        should be assigned.  (max(order) + 1)
 
         :param changeset:  The changeset to apply.
         :type changeset:  tern.Changeset
