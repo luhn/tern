@@ -1,0 +1,7 @@
+--- Order: 12
+--- Begin setup
+create table foo(id primary key);
+--- End
+--- Begin teardown
+drop table foo;
+--- End
