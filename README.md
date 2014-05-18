@@ -1,6 +1,8 @@
 Tern
 ====
 
+[![Build Status](https://travis-ci.org/luhn/tern.svg?branch=master)](https://travis-ci.org/luhn/tern)
+
 **Tern** is a simple way to version control your database.  It integrates with git (Support for more SCMs upcoming), and you can use it to distribute and manage schema changes across git branches, team members, and servers.
 
 Quickstart
