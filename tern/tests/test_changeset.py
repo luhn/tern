@@ -8,6 +8,7 @@ from tern.changeset import Changeset
 dir = os.path.dirname(__file__)
 changeset_save_fn = os.path.join(dir, 'data/test_save')
 
+
 def test_changeset_from_file():
     fn = os.path.join(dir, 'data/changeset')
     changeset = Changeset.from_file(fn)
@@ -15,6 +16,7 @@ def test_changeset_from_file():
     eq_(changeset.order, 12)
     eq_(changeset.setup.strip(), 'create table foo(id primary key);')
     eq_(changeset.teardown.strip(), 'drop table foo;')
+
 
 def test_changeset_hash():
     changeset = Changeset(12, 'abc', 'cba')
@@ -27,9 +29,11 @@ def test_changeset_hash():
         'c81342942339fb45a6633e8b7679c119fca384ac',
     )
 
+
 def save_teardown():
     if os.path.exists(changeset_save_fn):
         os.remove(changeset_save_fn)
+
 
 @with_setup(lambda: None, save_teardown)
 def test_changeset_save():
