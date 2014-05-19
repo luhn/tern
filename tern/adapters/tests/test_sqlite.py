@@ -47,7 +47,6 @@ class TestSQLiteAdapter(object):
 
         """
         changeset = Changeset(
-            order=1,
             setup=(
                 """
                 create table foo(id integer primary key);
@@ -62,6 +61,7 @@ class TestSQLiteAdapter(object):
                 drop table foo;
                 """
             ),
+            order=1,
             created_at=123,
         )
         self.adapter.apply(changeset)
@@ -100,10 +100,9 @@ class TestSQLiteAdapter(object):
 
         """
         self.adapter._save_changeset(Changeset(
-            3, '', '', 0,
+            '', '', 3,
         ))
         changeset = Changeset(
-            order=None,
             setup=(
                 """
                 create table foo(id integer primary key);
@@ -118,6 +117,7 @@ class TestSQLiteAdapter(object):
                 drop table foo;
                 """
             ),
+            order=None,
             created_at=123,
         )
         self.adapter.apply(changeset)

@@ -20,7 +20,7 @@ def test_changeset_from_file():
 
 
 def test_changeset_hash():
-    changeset = Changeset(12, 'abc', 'cba', 123123)
+    changeset = Changeset('abc', 'cba', 12, 123123)
     eq_(
         changeset.hash,
         b'N\xe6\x94\xde\xe3\x10%\x1c[\xfe\x02\x02\xd3\x14\xc7Q\xaez\xccZ',
@@ -39,12 +39,12 @@ def save_teardown():
 @with_setup(lambda: None, save_teardown)
 def test_changeset_save():
     # Save a changeset
-    changeset = Changeset(24, 'foo', 'bar', 123321)
+    changeset = Changeset('foo', 'bar', 24)
     changeset.save(changeset_save_fn)
 
     # Load it, and verify integrity.
-    changeset.from_file(changeset_save_fn)
-    eq_(changeset.created_at, 123321)
-    eq_(changeset.order, 24)
-    eq_(changeset.setup, 'foo')
-    eq_(changeset.teardown, 'bar')
+    loaded = Changeset.from_file(changeset_save_fn)
+    eq_(loaded.created_at, changeset.created_at)
+    eq_(loaded.order, 24)
+    eq_(loaded.setup, 'foo')
+    eq_(loaded.teardown, 'bar')

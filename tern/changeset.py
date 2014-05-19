@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import re
 import hashlib
+from time import time as unix_timestamp
 
 from .exceptions import InvalidChangesetFile
 
@@ -37,11 +38,14 @@ class Changeset(object):
         r'^-{2,}\s*begin teardown$', flags=re.IGNORECASE
     )
 
-    def __init__(self, order, setup, teardown, created_at):
-        self.order = order
+    def __init__(self, setup, teardown, order=None, created_at=None):
         self.setup = setup
         self.teardown = teardown
-        self.created_at = created_at
+        self.order = order
+        if created_at is None:
+            self.created_at = int(unix_timestamp())
+        else:
+            self.created_at = created_at
 
     @classmethod
     def from_file(cls, filename):
@@ -105,7 +109,7 @@ class Changeset(object):
         if created_at is None:
             raise InvalidChangesetFile('File did not define created at.')
 
-        return cls(order, setup, teardown, created_at)
+        return cls(setup, teardown, order, created_at)
 
     def save(self, filename):
         """
