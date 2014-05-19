@@ -48,7 +48,9 @@ class TestSQLiteAdapter(object):
             setup=(
                 """
                 create table foo(id integer primary key);
-                insert into foo values (1), (2), (3);
+                insert into foo values (1);
+                insert into foo values (2);
+                insert into foo values (3);
                 """
             ),
             teardown=(
@@ -102,7 +104,9 @@ class TestSQLiteAdapter(object):
             setup=(
                 """
                 create table foo(id integer primary key);
-                insert into foo values (1), (2), (3);
+                insert into foo values (1);
+                insert into foo values (2);
+                insert into foo values (3);
                 """
             ),
             teardown=(
@@ -136,10 +140,10 @@ class TestSQLiteAdapter(object):
                     """
                     create table foo(id integer primary key)
                     """)
-                c.execute(
+                c.executemany(
                     """
-                    insert into foo values (1), (2), (3)
-                    """)
+                    insert into foo values (?)
+                    """, [(1,), (2,), (3,)])
 
         changeset = Changeset(
             order=1,
