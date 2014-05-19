@@ -8,12 +8,7 @@ from .adapterbase import AdapterBase
 
 class SQLiteAdapter(AdapterBase):
     """
-    This allows Tern to work on SQLite databases.  This is the reference
-    implementation for AdapterBase.
-
-    Why is this the reference implement?  Although SQLite is rarely used in
-    production (for good reason), it's ideal for fast development and testing
-    and yields clean, readable code.
+    This allows Tern to work on SQLite databases.
 
     Many methods are undocumented because they're already documented in
     AdapterBase.
@@ -152,7 +147,17 @@ class SQLiteAdapter(AdapterBase):
             self._delete_changeset(changeset)
 
     def test(self, changeset):
-        pass
+        """
+        Although SQLite supports transactions on most operations, a "feature"
+        in the Python SQLite library prevents transactions on many commands.
+
+        """
+        try:
+            with self._cursor() as c:
+                c.executescript(changeset.setup)
+                c.executescript(changeset.teardown)
+        finally:
+            self.conn.rollback()
 
     def get_applied(self):
         pass

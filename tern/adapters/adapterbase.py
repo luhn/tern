@@ -85,7 +85,7 @@ class AdapterBase(object):
     def test(self, changeset):
         """
         Apply and revert the given changeset, and then rollback the
-        transaction.
+        transaction.  Throws any SQL errors that might occur.
 
         :param changeset:  The changeset to test.
         :type changeset:  tern.Changeset

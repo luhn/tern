@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from nose.tools import eq_
+import sqlite3
 
 from ..sqlite import SQLiteAdapter
 from ...exceptions import NotInitialized
@@ -26,6 +27,7 @@ def test_sqlite_initialize():
 
 class TestSQLiteAdapter(object):
     def setup(self):
+        print('Setup')
         self.adapter = SQLiteAdapter(
             host=':memory:',
             dbname=None,
@@ -36,6 +38,7 @@ class TestSQLiteAdapter(object):
         self.adapter.initialize_tern()
 
     def teardown(self):
+        print('Teardown')
         self.adapter.close()
 
     def test_sqlite_apply(self):
@@ -173,3 +176,44 @@ class TestSQLiteAdapter(object):
             eq_(results[0][0], 2)
 
         assert self.adapter._changeset_exists(changeset) is False
+
+    def _test_sqlite_test(self):
+        """
+        Test ``SQLiteAdapter.test``.
+
+        """
+        # Error in setup
+        changeset = Changeset(
+            order=1,
+            setup='create table asdf;',
+            teardown='drop table faux;',
+            created_at=123,
+        )
+        try:
+            self.adapter.test(changeset)
+            raise AssertionError('No error was thrown.')
+        except sqlite3.Error:
+            pass
+
+        # Error in teardown
+        changeset = Changeset(
+            order=1,
+            setup='create table foo(id integer primary key);',
+            teardown='drop table faux;',
+            created_at=123,
+        )
+        try:
+            self.adapter.test(changeset)
+            raise AssertionError('No error was thrown.')
+        except sqlite3.Error:
+            pass
+
+        # No error.
+        # This also verifies that the previous transactions were rolled back.
+        changeset = Changeset(
+            order=1,
+            setup='create table foo(id integer primary key);',
+            teardown='drop table foo;',
+            created_at=123,
+        )
+        self.adapter.test(changeset)
