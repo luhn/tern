@@ -124,3 +124,48 @@ class TestSQLiteAdapter(object):
                 where hash = ?
                 """, (changeset.hex_hash,))
             eq_(c.fetchone()[0], 4)
+
+    def test_sqlite_revert(self):
+        """
+        Test ``SQLiteAdapter.revert``.
+
+        """
+        with self.adapter.conn:
+            with self.adapter._cursor() as c:
+                c.execute(
+                    """
+                    create table foo(id integer primary key)
+                    """)
+                c.execute(
+                    """
+                    insert into foo values (1), (2), (3)
+                    """)
+
+        changeset = Changeset(
+            order=1,
+            setup='badsql',
+            teardown=(
+                """
+                delete from foo where id = 1;
+                delete from foo where id = 3;
+                """
+            ),
+            created_at=123,
+        )
+        self.adapter._save_changeset(changeset)
+        self.adapter.conn.commit()
+
+        self.adapter.revert(changeset)
+
+        with self.adapter._cursor() as c:
+            c.execute(
+                """
+                select id
+                from foo
+                order by id
+                """)
+            results = c.fetchall()
+            eq_(len(results), 1)
+            eq_(results[0][0], 2)
+
+        assert self.adapter._changeset_exists(changeset) is False

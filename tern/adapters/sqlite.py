@@ -54,7 +54,9 @@ class SQLiteAdapter(AdapterBase):
                 select count(*)
                 from {0}
                 where hash = ?
-                """, (changeset.hex_hash,))
+                """.format(self.tablename),
+                (changeset.hex_hash,)
+            )
             return c.fetchone()[0] > 0
 
     def _save_changeset(self, changeset):
@@ -70,21 +72,27 @@ class SQLiteAdapter(AdapterBase):
                 insert into {0}(hash, created_at, setup, teardown,
                     "order")
                 values (?, ?, ?, ?, ?)
-                """, (changeset.hex_hash, changeset.created_at,
-                      changeset.setup, changeset.teardown, changeset.order))
+                """.format(self.tablename),
+                (
+                    changeset.hex_hash, changeset.created_at,
+                    changeset.setup, changeset.teardown, changeset.order
+                )
+            )
 
     def _delete_changeset(self, changeset):
         """
         Delete changeset in the tern table.  Does not commit the change.
 
         """
-        if self._changeset_exists(changeset):
+        if not self._changeset_exists(changeset):
             raise ValueError('Changeset does not exist in database.')
         with self._cursor() as c:
             c.execute(
                 """
                 delete from {0} where hash = ?
-                """, (changeset.hex_hash,))
+                """.format(self.tablename),
+                (changeset.hex_hash,)
+            )
 
     def initialize_tern(self):
         with self.conn:
@@ -114,13 +122,34 @@ class SQLiteAdapter(AdapterBase):
     def apply(self, changeset):
         if self._changeset_exists(changeset):
             raise ValueError('Changeset has already been applied.')
+
+        if changeset.order is None:
+            with self._cursor() as c:
+                c.execute(
+                    """
+                    select max("order")
+                    from {0}
+                    """.format(self.tablename))
+                order = c.fetchone()[0]
+                if order is None:
+                    order = 1
+                else:
+                    order += 1
+                changeset.order = order
+
         with self.conn:
             with self._cursor() as c:
                 c.executescript(changeset.setup)
             self._save_changeset(changeset)
 
     def revert(self, changeset):
-        pass
+        if not self._changeset_exists(changeset):
+            raise ValueError('Changeset has not yet been applied.')
+
+        with self.conn:
+            with self._cursor() as c:
+                c.executescript(changeset.teardown)
+            self._delete_changeset(changeset)
 
     def test(self, changeset):
         pass
