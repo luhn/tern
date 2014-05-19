@@ -23,11 +23,11 @@ def test_changeset_hash():
     changeset = Changeset('abc', 'cba', 12, 123123)
     eq_(
         changeset.hash,
-        b'N\xe6\x94\xde\xe3\x10%\x1c[\xfe\x02\x02\xd3\x14\xc7Q\xaez\xccZ',
+        b'\xa2\x90\xfa\x0473E\xfc@\xb5\xd9\x89_;\xfb!\xf7\xedN\xf7',
     )
     eq_(
         changeset.hex_hash,
-        '4ee694dee310251c5bfe0202d314c751ae7acc5a',
+        'a290fa04373345fc40b5d9895f3bfb21f7ed4ef7',
     )
 
 

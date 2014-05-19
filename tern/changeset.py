@@ -147,20 +147,33 @@ class Changeset(object):
     def teardown(self, value):
         self._teardown = value.strip()
 
+    def _quintessence(self):
+        """
+        This returns a tuple which contains the important data of this object.
+        Used for hashing and equality.
+
+        """
+        return self.created_at, self.order, self.setup, self.teardown
+
+    def __hash__(self):
+        return hash(self._quintessence())
+
+    def __eq__(self, other):
+        return self._quintessence() == other._quintessence()
+
     def _make_hash(self):
         h = hashlib.sha1()
-        h.update(str(self.created_at).encode('utf-8'))
-        h.update('-'.encode('utf-8'))
-        h.update(str(self.order).encode('utf-8'))
-        h.update(self.setup.encode('utf-8'))
-        h.update(self.teardown.encode('utf-8'))
+        h.update(':'.join(
+            str(s).encode('utf-8') for s in self._quintessence()
+        ))
         return h
 
     @property
     def hash(self):
         """
         Returns a hash as a binary string of the object, which is the SHA-1
-        hash of ``str(created_at) + '-' + str(order) + setup + teardown``.
+        hash of the quintessence (created at, order, setup, teardown) joined
+        by colons.
 
         """
         return self._make_hash().digest()
@@ -168,8 +181,9 @@ class Changeset(object):
     @property
     def hex_hash(self):
         """
-        Returns a hexidecimal hash of the object, which is the SHA-1 hash of
-        ``str(created_at) + '-' + str(order) + setup + teardown``.
+        Returns a hash as a binary string of the object, which is the SHA-1
+        hash of the quintessence (created at, order, setup, teardown) joined
+        by colons.
 
         """
         return self._make_hash().hexdigest()
