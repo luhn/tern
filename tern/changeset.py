@@ -164,8 +164,8 @@ class Changeset(object):
     def _make_hash(self):
         h = hashlib.sha1()
         h.update(':'.join(
-            str(s).encode('utf-8') for s in self._quintessence()
-        ))
+            str(s) for s in self._quintessence()
+        ).encode('utf-8'))
         return h
 
     @property

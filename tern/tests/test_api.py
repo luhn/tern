@@ -19,7 +19,9 @@ class TestAPI(object):
 
         # Create a directory to test in.
         # Taken from http://stackoverflow.com/a/2782859/600247
-        randstr = ''.join(random.choice(string.lowercase) for _ in range(16))
+        randstr = ''.join(
+            random.choice(string.ascii_lowercase) for _ in range(16)
+        )
         self.directory = '.terntest-{}'.format(randstr)
         os.mkdir(self.directory)
         self.tern = Tern(self.adapter, self.directory)
