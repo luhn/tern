@@ -22,7 +22,7 @@ class TestAPI(object):
         randstr = ''.join(
             random.choice(string.ascii_lowercase) for _ in range(16)
         )
-        self.directory = '.terntest-{}'.format(randstr)
+        self.directory = '.terntest-{0}'.format(randstr)
         os.mkdir(self.directory)
         self.tern = Tern(self.adapter, self.directory)
 
