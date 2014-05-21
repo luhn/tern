@@ -40,4 +40,4 @@ class MockAdapter(AdapterBase):
         pass
 
     def get_applied(self):
-        pass
+        return self.applied
