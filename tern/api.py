@@ -57,14 +57,16 @@ class Tern(object):
         defined in the tern directory.
 
         :returns:  A 2-element tuple:  The first element is a list of
-        changesets that need to be torn down, the second a list of changesets
-        that need to be applied.  Both lists are correctly ordered, so the
-        changesets can be applied/torn down in sequence.
+        changesets that exist in the database but not in the repository
+        (changesets to be reverted), the second changesets in the repository
+        but not the database (changesets to be applied).  Both lists are
+        correctly ordered, so the changesets can be applied/reverted in
+        sequence.
 
         """
         applied = self.adapter.get_applied()
         saved = self._get_saved_changesets()
-        to_teardown = sorted(
+        to_revert = sorted(
             (x for x in applied if x not in saved),
             key=lambda x: x.order,
             reverse=True,
@@ -73,4 +75,14 @@ class Tern(object):
             (x for x in saved if x not in applied),
             key=lambda x: x.order,
         )
-        return to_teardown, to_apply
+        return to_revert, to_apply
+
+    def update(self):
+        """
+        Generate the diff and apply it.
+
+        """
+        with self.adapter:
+            to_revert, to_apply = self.diff()
+            [self.adapter.revert(cs) for cs in to_revert]
+            [self.adapter.apply(cs) for cs in to_apply]

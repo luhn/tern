@@ -34,7 +34,7 @@ class MockAdapter(AdapterBase):
         self.applied.append(changeset)
 
     def revert(self, changeset):
-        pass
+        self.applied.remove(changeset)
 
     def test(self, changeset):
         pass

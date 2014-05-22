@@ -75,6 +75,38 @@ class TestAPI(object):
         self.adapter.applied = [foo, baz, baz2]
         self._save_changesets([foo, bar, bar2])
 
-        teardown, apply = self.tern.diff()
-        eq_(teardown, [baz2, baz])
-        eq_(apply, [bar, bar2])
+        to_revert, to_apply = self.tern.diff()
+        eq_(to_revert, [baz2, baz])
+        eq_(to_apply, [bar, bar2])
+
+    def test_update(self):
+        foo = Changeset(
+            setup='create foo',
+            teardown='drop foo',
+            order=1,
+        )
+        bar = Changeset(
+            setup='create bar',
+            teardown='drop baz',
+            order=2,
+        )
+        bar2 = Changeset(
+            setup='create bar2',
+            teardown='drop bar2',
+            order=3,
+        )
+        baz = Changeset(
+            setup='create baz',
+            teardown='drop baz',
+            order=2,
+        )
+        baz2 = Changeset(
+            setup='create baz2',
+            teardown='drop baz2',
+            order=3,
+        )
+        self.adapter.applied = [foo, baz, baz2]
+        self._save_changesets([foo, bar, bar2])
+
+        self.tern.update()
+        eq_(self.adapter.applied, [foo, bar, bar2])

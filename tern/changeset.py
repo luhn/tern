@@ -187,3 +187,6 @@ class Changeset(object):
 
         """
         return self._make_hash().hexdigest()
+
+    def __repr__(self):
+        return 'Changeset{0!r}'.format(self._quintessence())
