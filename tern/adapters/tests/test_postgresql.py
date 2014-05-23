@@ -1,47 +1,78 @@
 from __future__ import absolute_import
 from nose.tools import eq_
-import sqlite3
+from testconfig import config
+import psycopg2
 
-from ..sqlite import SQLiteAdapter
+from ..postgresql import PostgreSQLAdapter
 from ...exceptions import NotInitialized
 from ...changeset import Changeset
 
 
-def test_sqlite_initialize():
-    adapter = SQLiteAdapter(
-        host=':memory:',
-        dbname=None,
-        username=None,
-        password=None,
-    )
-    with adapter:
-        try:
-            adapter.verify_tern()
-            raise AssertionError('Verify did not throw exception.')
-        except NotInitialized:
-            pass
-
-        adapter.initialize_tern()
-        adapter.verify_tern()
-
-
-class TestSQLiteAdapter(object):
+class TestPostgreSQLAdapter(object):
     def setup(self):
-        self.adapter = SQLiteAdapter(
-            host=':memory:',
-            dbname=None,
-            username=None,
-            password=None,
+        self.adapter = PostgreSQLAdapter(
+            host=config['database'].get('host') or None,
+            dbname=config['database'].get('dbname') or None,
+            username=config['database'].get('username') or None,
+            password=config['database'].get('password') or None,
         )
         self.adapter.open()
         self.adapter.initialize_tern()
 
     def teardown(self):
+        self._rollback()
+        with self._cursor() as c:
+            try:
+                c.execute(
+                    """
+                    drop table tern;
+                    """)
+                self._commit()
+            except psycopg2.Error:
+                self._rollback()
+
+        # Drop other tables that may have been created.
+        with self._cursor() as c:
+            try:
+                c.execute(
+                    """
+                    drop table foo;
+                    """
+                )
+                self._commit()
+            except psycopg2.Error:
+                self._rollback()
+
         self.adapter.close()
 
-    def test_sqlite_apply(self):
+    def _cursor(self):
+        return self.adapter.conn.cursor()
+
+    def _commit(self):
+        self.adapter.conn.commit()
+
+    def _rollback(self):
+        self.adapter.conn.rollback()
+
+    def test_postgresql_verify(self):
+        self.adapter.verify_tern()
+
+        # Delete tern table, and try again.
+        with self._cursor() as c:
+            c.execute(
+                """
+                drop table tern;
+                """)
+            self._commit()
+        try:
+            self.adapter.verify_tern()
+            raise AssertionError('Verify did not throw exception.')
+        except NotInitialized:
+            pass
+
+    def test_postgresql_apply(self):
         """
-        Test ``SQLiteAdapter.apply``.
+        Test ``PostgreSQLAdapter.apply``.
 
         """
         changeset = Changeset(
@@ -64,12 +95,12 @@ class TestSQLiteAdapter(object):
         )
         self.adapter.apply(changeset)
 
-        with self.adapter._cursor() as c:
+        with self._cursor() as c:
             c.execute(
                 """
                 select created_at, setup, teardown, "order"
                 from tern
-                where hash = ?
+                where hash = %s
                 """, (changeset.hex_hash,))
             data = c.fetchall()
             eq_(len(data), 1)
@@ -79,7 +110,7 @@ class TestSQLiteAdapter(object):
             eq_(row[2], changeset.teardown)
             eq_(row[3], changeset.order)
 
-        with self.adapter._cursor() as c:
+        with self._cursor() as c:
             c.execute(
                 """
                 select id from foo
@@ -91,10 +122,10 @@ class TestSQLiteAdapter(object):
             eq_(data[1][0], 2)
             eq_(data[2][0], 3)
 
-    def test_sqlite_apply_no_order(self):
+    def test_postgresql_apply_no_order(self):
         """
-        Test ``SQLiteAdapter.apply`` with a changeset with no order defined.
-        An order should be assigned.
+        Test ``PostgreSQLAdapter.apply`` with a changeset with no order
+        defined.  An order should be assigned.
 
         """
         self.adapter._save_changeset(Changeset(
@@ -121,30 +152,30 @@ class TestSQLiteAdapter(object):
         self.adapter.apply(changeset)
         eq_(changeset.order, 4)
 
-        with self.adapter._cursor() as c:
+        with self._cursor() as c:
             c.execute(
                 """
                 select "order"
                 from tern
-                where hash = ?
+                where hash = %s
                 """, (changeset.hex_hash,))
             eq_(c.fetchone()[0], 4)
 
-    def test_sqlite_revert(self):
+    def test_postgresql_revert(self):
         """
-        Test ``SQLiteAdapter.revert``.
+        Test ``PostgreSQLAdapter.revert``.
 
         """
         with self.adapter.conn:
-            with self.adapter._cursor() as c:
+            with self._cursor() as c:
                 c.execute(
                     """
                     create table foo(id integer primary key)
                     """)
-                c.executemany(
+                c.execute(
                     """
-                    insert into foo values (?)
-                    """, [(1,), (2,), (3,)])
+                    insert into foo values (1), (2), (3)
+                    """)
 
         changeset = Changeset(
             order=1,
@@ -162,7 +193,7 @@ class TestSQLiteAdapter(object):
 
         self.adapter.revert(changeset)
 
-        with self.adapter._cursor() as c:
+        with self._cursor() as c:
             c.execute(
                 """
                 select id
@@ -175,9 +206,9 @@ class TestSQLiteAdapter(object):
 
         assert self.adapter._changeset_exists(changeset) is False
 
-    def _test_sqlite_test(self):
+    def _test_postgresql_test(self):
         """
-        Test ``SQLiteAdapter.test``.
+        Test ``PostgreSQLAdapter.test``.
 
         """
         # Error in setup
@@ -190,7 +221,7 @@ class TestSQLiteAdapter(object):
         try:
             self.adapter.test(changeset)
             raise AssertionError('No error was thrown.')
-        except sqlite3.Error:
+        except psycopg2.Error:
             pass
 
         # Error in teardown
@@ -203,7 +234,7 @@ class TestSQLiteAdapter(object):
         try:
             self.adapter.test(changeset)
             raise AssertionError('No error was thrown.')
-        except sqlite3.Error:
+        except psycopg2.Error:
             pass
 
         # No error.
