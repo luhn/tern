@@ -206,7 +206,7 @@ class TestPostgreSQLAdapter(object):
 
         assert self.adapter._changeset_exists(changeset) is False
 
-    def _test_postgresql_test(self):
+    def test_postgresql_test(self):
         """
         Test ``PostgreSQLAdapter.test``.
 
@@ -246,3 +246,24 @@ class TestPostgreSQLAdapter(object):
             created_at=123,
         )
         self.adapter.test(changeset)
+
+    def test_get_applied(self):
+        cs1 = Changeset(
+            order=1,
+            setup='sqlsql',
+            teardown='pizzapizza',
+            created_at=123,
+        )
+        cs2 = Changeset(
+            order=2,
+            setup='wowsql',
+            teardown='suchsql',
+            created_at=124,
+        )
+        self.adapter._save_changeset(cs1)
+        self.adapter._save_changeset(cs2)
+
+        applied = self.adapter.get_applied()
+        eq_(len(applied), 2)
+        assert cs1 in applied
+        assert cs2 in applied

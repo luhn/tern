@@ -8,6 +8,7 @@ except ImportError:
 
 from ..exceptions import NotInitialized
 from .adapterbase import AdapterBase
+from ..changeset import Changeset
 
 
 class PostgreSQLAdapter(AdapterBase):
@@ -151,11 +152,6 @@ class PostgreSQLAdapter(AdapterBase):
             self._delete_changeset(changeset)
 
     def test(self, changeset):
-        """
-        Although SQLite supports transactions on most operations, a "feature"
-        in the Python SQLite library prevents transactions on many commands.
-
-        """
         try:
             with self.conn.cursor() as c:
                 c.execute(changeset.setup)
@@ -164,4 +160,18 @@ class PostgreSQLAdapter(AdapterBase):
             self.conn.rollback()
 
     def get_applied(self):
-        pass
+        applied = list()
+        with self.conn.cursor() as c:
+            c.execute(
+                """
+                select setup, teardown, "order", created_at
+                from {0}
+                """.format(self.tablename))
+            for row in c:
+                applied.append(Changeset(
+                    setup=row[0],
+                    teardown=row[1],
+                    order=row[2],
+                    created_at=row[3],
+                ))
+        return applied
