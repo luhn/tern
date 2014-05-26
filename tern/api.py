@@ -19,11 +19,12 @@ class Tern(object):
 
     _changeset_file_re = re.compile(r'^[0-9a-f]{40}$')
 
-    def __init__(self, adapter, directory):
+    def __init__(self, adapter, directory, verify=True):
         self.adapter = adapter
         self.directory = directory
         # Make sure everything has been set up.
-        self.adapter.verify_tern()
+        if verify:
+            self.adapter.verify_tern()
 
     def apply(self, changeset):
         """

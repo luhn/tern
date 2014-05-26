@@ -199,9 +199,7 @@ def load(config_file, verify=True):
     del config['adapter']['module']
     adapter = Adapter(**config['adapter'])
     adapter.open()
-    if verify:
-        adapter.verify_tern()
-    tern = Tern(adapter, config['directory'])
+    tern = Tern(adapter, config['directory'], verify=verify)
     return config, tern, adapter
 
 
