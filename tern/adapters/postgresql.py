@@ -24,10 +24,10 @@ class PostgreSQLAdapter(AdapterBase):
     """
 
     def __init__(self, host, dbname, username, password, tern_table='tern'):
-        self.host = host
-        self.dbname = dbname
-        self.username = username
-        self.password = password
+        self.host = host or None
+        self.dbname = dbname or None
+        self.username = username or None
+        self.password = password or None
         self.tablename = tern_table
 
     def open(self):
@@ -147,15 +147,17 @@ class PostgreSQLAdapter(AdapterBase):
             raise ValueError('Changeset has not yet been applied.')
 
         with self.conn:
-            with self.conn.cursor() as c:
-                c.execute(changeset.teardown)
+            if changeset.teardown:
+                with self.conn.cursor() as c:
+                    c.execute(changeset.teardown)
             self._delete_changeset(changeset)
 
     def test(self, changeset):
         try:
             with self.conn.cursor() as c:
                 c.execute(changeset.setup)
-                c.execute(changeset.teardown)
+                if changeset.teardown:
+                    c.execute(changeset.teardown)
         finally:
             self.conn.rollback()
 

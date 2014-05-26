@@ -4,6 +4,15 @@ from abc import ABCMeta, abstractmethod
 class AdapterBase(object):
     __metaclass__ = ABCMeta
 
+    # A list of attributes to be defined in config.
+    # (var name, display name, default)
+    config = [
+        ('host', 'Host', ''),
+        ('dbname', 'Database name', ''),
+        ('username', 'Username', ''),
+        ('password', 'Password', ''),
+    ]
+
     @abstractmethod
     def __init__(self, host, dbname, username, password, tern_table='tern'):
         """

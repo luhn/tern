@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-requires = ['six']
+requires = ['six', 'PyYAML']
 
 # Do we need importlib?  (Python 2.6)
 try:
