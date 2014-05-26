@@ -1,5 +1,14 @@
 from setuptools import setup, find_packages
 
+requires = ['six']
+
+# Do we need importlib?  (Python 2.6)
+try:
+    import importlib  # noqa
+except ImportError:
+    requires.append('importlib')
+
+
 setup(
     name='Tern',
     version='0.1.0',
@@ -13,7 +22,5 @@ setup(
             'tern = tern.__main__:main',
         ],
     ),
-    requires=[
-        'six',
-    ],
+    requires=requires,
 )
