@@ -22,5 +22,5 @@ setup(
             'tern = tern.__main__:main',
         ],
     ),
-    requires=requires,
+    install_requires=requires,
 )
