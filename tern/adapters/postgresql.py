@@ -138,9 +138,18 @@ class PostgreSQLAdapter(AdapterBase):
                 changeset.order = order
 
         with self.conn:
-            with self.conn.cursor() as c:
-                c.execute(changeset.setup)
-            self._save_changeset(changeset)
+            try:
+                with self.conn.cursor() as c:
+                    c.execute(changeset.setup)
+                self._save_changeset(changeset)
+            except psycopg2.ProgrammingError:
+                print 'An error occurred while applying {}'.format(
+                    changeset.hex_hash
+                )
+                print
+                print changeset.setup
+                print
+                raise
 
     def revert(self, changeset):
         if not self._changeset_exists(changeset):
