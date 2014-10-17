@@ -8,6 +8,7 @@ import sys
 import os
 import os.path
 import yaml
+from six.moves import input
 from argparse import ArgumentParser
 from importlib import import_module
 
@@ -53,13 +54,13 @@ def main():
             while True:
                 sys.stdout.write('Config file [tern.yml]: ')
                 sys.stdout.flush()
-                config_file = raw_input() or 'tern.yml'
+                config_file = input() or 'tern.yml'
                 if os.path.isfile(config_file):
                     sys.stdout.write(
                         'File already exists.  Overwrite? (y/n): '
                     )
                     sys.stdout.flush()
-                    if raw_input().lower() != 'y':
+                    if input().lower() != 'y':
                         continue
                 try:
                     fh = open(config_file, 'w')
@@ -73,7 +74,7 @@ def main():
                     'Tern directory relative to config file [tern/]: '
                 )
                 sys.stdout.flush()
-                directory = raw_input() or 'tern/'
+                directory = input() or 'tern/'
                 test = os.path.join(os.path.dirname(config_file), directory)
                 if not os.path.isdir(test):
                     try:
@@ -87,7 +88,7 @@ def main():
             while True:
                 sys.stdout.write('Adapter module [postgres]: ')
                 sys.stdout.flush()
-                adapter_name = raw_input()
+                adapter_name = input()
 
                 # First, try in adapter package.
                 try:
@@ -101,7 +102,7 @@ def main():
                         sys.stderr.write('Could not find adapter.\n')
                         continue
 
-                Aadapter = extract_adapter(module)
+                Adapter = extract_adapter(module)
                 if Adapter is None:
                     sys.stderr.write('Module loaded, but no adapter found.\n')
                     continue
@@ -111,8 +112,8 @@ def main():
                 for name, display, default in Adapter.config:
                     sys.sydout.write('{0} [(1)]: '.format(display, default))
                     sys.stdout.flush()
-                    config['adapter'][name] = raw_input() or default
-                    kwargs[name] = config['adapter'][name]
+                    config['adapter'][name] = input() or default
+                    # kwargs[name] = config['adapter'][name]
 
                 sys.stdout.write('Tern tablename [tern]: ')
                 sys.stdout.flush()

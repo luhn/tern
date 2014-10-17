@@ -143,12 +143,12 @@ class PostgreSQLAdapter(AdapterBase):
                     c.execute(changeset.setup)
                 self._save_changeset(changeset)
             except psycopg2.ProgrammingError:
-                print 'An error occurred while applying {}'.format(
+                print('An error occurred while applying {}'.format(
                     changeset.hex_hash
-                )
-                print
-                print changeset.setup
-                print
+                ))
+                print()
+                print(changeset.setup)
+                print()
                 raise
 
     def revert(self, changeset):
