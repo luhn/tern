@@ -23,8 +23,11 @@ class PostgreSQLAdapter(AdapterBase):
 
     """
 
-    def __init__(self, host, dbname, username, password, tern_table='tern'):
+    def __init__(
+        self, host, dbname, username, password, port=None, tern_table='tern'
+    ):
         self.host = host or None
+        self.port = port or None
         self.dbname = dbname or None
         self.username = username or None
         self.password = password or None
@@ -33,6 +36,7 @@ class PostgreSQLAdapter(AdapterBase):
     def open(self):
         self.conn = psycopg2.connect(
             host=self.host,
+            port=self.port,
             database=self.dbname,
             user=self.username,
             password=self.password,

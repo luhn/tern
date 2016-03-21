@@ -8,13 +8,16 @@ class AdapterBase(object):
     # (var name, display name, default)
     config = [
         ('host', 'Host', ''),
+        ('port', 'Port', ''),
         ('dbname', 'Database name', ''),
         ('username', 'Username', ''),
         ('password', 'Password', ''),
     ]
 
     @abstractmethod
-    def __init__(self, host, dbname, username, password, tern_table='tern'):
+    def __init__(
+        self, host, dbname, username, password, port=None, tern_table='tern'
+    ):
         """
         Initialize the Adapter; do not yet connect to database.
 
